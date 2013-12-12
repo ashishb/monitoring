@@ -1,0 +1,98 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+	<title>Monitor Page</title>
+	<link type="text/css"	href="./css/jquery.jqplot.css" rel="stylesheet" />
+	<script type="text/javascript" src="./js/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="./js/jquery.jqplot.min.js"></script>
+	<script type="text/javascript" 
+		src="./js/jqplot.canvasTextRenderer.min.js"></script>
+		<script type="text/javascript"
+			src="./js/lib/jqplot.canvasAxisLabelRenderer.min.js"></script>
+</head>
+
+<body>
+<script type="text/javascript" charset="utf-8">
+our_arrays = {}
+our_plots = {}
+our_divs = {}
+
+function getUrlFor(name) {
+	// TODO: Implement this.
+	// For a given variable name, this should return the url which when fetched
+	// via GET query will return data which can be parsed as double precision.
+	return "http://implement/url/to/fetch/variable/in/the/code" + "/" + name;
+}
+function setup(name) {
+	our_arrays[name + "_array"] = [[0, -1]];
+	$(document).ready(function(){
+		our_divs[name] = document.createElement('div');
+		our_divs[name].id = name + '_chart'
+		document.body.appendChild(our_divs[name]);
+		our_plots[name + "_plot"] = $.jqplot(name + '_chart', [our_arrays[name + "_array"]], {
+			// Give the plot a title.
+			title: name,
+				// You can specify options for all axes on the plot at once with
+				// the axesDefaults object.  Here, we're using a canvas renderer
+				// to draw the axis label which allows rotated text.
+				axesDefaults: { labelRenderer: $.jqplot.CanvasAxisLabelRenderer	},
+				// An axes object holds options for all axes.
+				// Allowable axes are xaxis, x2axis, yaxis, y2axis, y3axis, ...
+				// Up to 9 y axes are supported.
+				axes: {
+				  // options for each axis are specified in seperate option objects.
+				  xaxis: {
+				    label: "X Axis",
+				    // Turn off "padding".  This will allow data point to lie on the
+				    // edges of the grid.  Default padding is 1.2 and will keep all
+				    // points inside the bounds of the grid.
+				    pad: 0 },
+				  yaxis: { label: "Y Axis" }
+				}
+		});
+	});
+}
+
+function start(name) {
+	function update() {
+		$.get(getUrlFor(name), function(data) {
+				data = data.replace('"', '');
+				result = parseFloat(String(data));
+				our_arrays[name + "_array"].push([our_arrays[name + "_array"].length,
+					result]);
+				})
+		our_plots[name + "_plot"].resetAxesScale(); 
+		our_plots[name + "_plot"].series[0].data = our_arrays[name + "_array"];
+		our_plots[name + "_plot"].replot();
+	}
+	window.setInterval(update, 3 * 1000);
+}
+	
+function setupAndStart(name) {
+	setup(name);
+	start(name);
+}
+	
+	</script>
+<script type="text/javascript" charset="utf-8">
+	document.write("To track " + getUrlFor("variable_name") +
+			" enter variable_name");
+</script>
+	<form>
+		<input id="var1" type="text" placeholder="Enter variable name to track" size=100 />
+		<input type="button" value="add"
+		onclick="setupAndStart(document.getElementById('var1').value)"><br>
+	</form>
+	<div id="potential_options">
+	</div>
+	<script type="text/javascript" charset="utf-8">
+		function addPotentialOption(name) {
+			field = document.createElement('a');
+			field.href = "javascript:setupAndStart('" + name + "')";
+			field.innerHTML = "<br>" + name;
+			document.getElementById('potential_options').appendChild(field);
+		}
+	</script>
+</body>
+</html>
